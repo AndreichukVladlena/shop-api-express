@@ -203,15 +203,14 @@ app.get("/items", async (req, res) => {
   res.json(await Item.find());
 });
 
-app.post("/bookings", async (req, res) => {
+app.post("/cart", async (req, res) => {
   const userData = await getUserDataFromRequest(req);
-  const { place, checkIn, checkOut, name, phone, price } = req.body;
-  Booking.create({
-    place,
-    checkIn,
-    checkOut,
+  const { item, name, phone, amount, price } = req.body;
+  CartItem.create({
+    item,
     name,
     phone,
+    amount,
     price,
     user: userData.id,
   })
@@ -223,9 +222,9 @@ app.post("/bookings", async (req, res) => {
     });
 });
 
-app.get("/bookings", async (req, res) => {
+app.get("/cart", async (req, res) => {
   const userData = await getUserDataFromRequest(req);
-  res.json(await Booking.find({ user: userData.id }).populate("place"));
+  res.json(await CartItem.find({ user: userData.id }).populate("item"));
 });
 
 app.listen(4000);
