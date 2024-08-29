@@ -7,6 +7,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("./models/User.js");
 const Item = require("./models/Item.js");
+const CartItem = require("./models/CartItem.js");
 const multer = require("multer");
 const fs = require("fs");
 
@@ -28,6 +29,15 @@ app.use(
 );
 
 mongoose.connect(process.env.MONGO_URL);
+
+function getUserDataFromRequest(req) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(req.cookies.token, jwtSecret, {}, async (err, userData) => {
+      if (err) throw err;
+      resolve(userData);
+    });
+  });
+}
 
 app.get("/test", (req, res) => {
   res.json("test ok");
@@ -191,6 +201,31 @@ app.put("/items", async (req, res) => {
 
 app.get("/items", async (req, res) => {
   res.json(await Item.find());
+});
+
+app.post("/bookings", async (req, res) => {
+  const userData = await getUserDataFromRequest(req);
+  const { place, checkIn, checkOut, name, phone, price } = req.body;
+  Booking.create({
+    place,
+    checkIn,
+    checkOut,
+    name,
+    phone,
+    price,
+    user: userData.id,
+  })
+    .then((doc) => {
+      res.json(doc);
+    })
+    .catch((err) => {
+      throw err;
+    });
+});
+
+app.get("/bookings", async (req, res) => {
+  const userData = await getUserDataFromRequest(req);
+  res.json(await Booking.find({ user: userData.id }).populate("place"));
 });
 
 app.listen(4000);
