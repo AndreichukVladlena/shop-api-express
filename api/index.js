@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("./models/User.js");
+const Item = require("./models/Item.js");
 const multer = require("multer");
 const fs = require("fs");
 
@@ -113,6 +114,83 @@ app.post("/upload", photosMiddleware.array("photos", 100), (req, res) => {
     uploadedFiles.push(newPath.replace("uploads/", ""));
   }
   res.json(uploadedFiles);
+});
+
+app.post("/items", (req, res) => {
+  const { token } = req.cookies;
+  const {
+    title,
+    color,
+    addedPhotos,
+    description,
+    perks,
+    productType,
+    width,
+    height,
+    weight,
+    price,
+  } = req.body;
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) throw err;
+
+    const ItemDoc = await Item.create({
+      title,
+      color,
+      photos: addedPhotos,
+      description,
+      perks,
+      productType,
+      width,
+      height,
+      weight,
+      price,
+    });
+    res.json(ItemDoc);
+  });
+});
+
+app.get("/items/:id", async (req, res) => {
+  const { id } = req.params;
+  res.json(await Item.findById(id));
+});
+
+app.put("/items", async (req, res) => {
+  const { token } = req.cookies;
+  const {
+    id,
+    title,
+    color,
+    addedPhotos,
+    description,
+    perks,
+    productType,
+    width,
+    height,
+    weight,
+    price,
+  } = req.body;
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    const itemDoc = await Item.findById(id);
+
+    itemDoc.set({
+      title,
+      color,
+      photos: addedPhotos,
+      description,
+      perks,
+      productType,
+      width,
+      height,
+      weight,
+      price,
+    });
+    await itemDoc.save();
+    res.json("ok");
+  });
+});
+
+app.get("/items", async (req, res) => {
+  res.json(await Item.find());
 });
 
 app.listen(4000);
