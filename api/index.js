@@ -200,7 +200,50 @@ app.put("/items", async (req, res) => {
 });
 
 app.get("/items", async (req, res) => {
-  res.json(await Item.find());
+  const filters = {};
+
+  if (req.query.title) {
+    filters.title = { $regex: req.query.title, $options: "i" };
+  }
+
+  if (req.query.color) {
+    filters.color = req.query.color;
+  }
+
+  if (req.query.productType) {
+    filters.productType = req.query.productType;
+  }
+
+  if (req.query.minPrice || req.query.maxPrice) {
+    filters.price = {};
+    if (req.query.minPrice) filters.price.$gte = req.query.minPrice;
+    if (req.query.maxPrice) filters.price.$lte = req.query.maxPrice;
+  }
+
+  if (req.query.minWidth || req.query.maxWidth) {
+    filters.width = {};
+    if (req.query.minWidth) filters.width.$gte = req.query.minWidth;
+    if (req.query.maxWidth) filters.width.$lte = req.query.maxWidth;
+  }
+
+  if (req.query.minHeight || req.query.maxHeight) {
+    filters.height = {};
+    if (req.query.minHeight) filters.height.$gte = req.query.minHeight;
+    if (req.query.maxHeight) filters.height.$lte = req.query.maxHeight;
+  }
+
+  if (req.query.minWeight || req.query.maxWeight) {
+    filters.weight = {};
+    if (req.query.minWeight) filters.weight.$gte = req.query.minWeight;
+    if (req.query.maxWeight) filters.weight.$lte = req.query.maxWeight;
+  }
+
+  try {
+    const items = await Item.find(filters);
+    res.json(items);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 app.post("/cart", async (req, res) => {
